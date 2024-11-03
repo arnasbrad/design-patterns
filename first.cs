@@ -1,285 +1,384 @@
 // ===================== SINGLETON =====================
 public sealed class Singleton
 {
-    private static readonly Singleton instance = new();
+    private static Singleton instance = null;
+    private static readonly object padlock = new object();
+
     private Singleton() { }
-    public static Singleton Instance => instance;
-    
-    public void DoWork() => Console.WriteLine("Singleton working");
-}
 
-// Usage
-Singleton.Instance.DoWork();
-
-// ===================== FACTORY =====================
-public interface IAnimal
-{
-    void MakeSound();
-}
-
-public class Dog : IAnimal
-{
-    public void MakeSound() => Console.WriteLine("Woof!");
-}
-
-public class Cat : IAnimal
-{
-    public void MakeSound() => Console.WriteLine("Meow!");
-}
-
-public class AnimalFactory
-{
-    public IAnimal CreateAnimal(string type) => type.ToLower() switch
+    public static Singleton Instance
     {
-        "dog" => new Dog(),
-        "cat" => new Cat(),
-        _ => throw new ArgumentException("Invalid animal type")
-    };
-}
-
-// Usage
-var factory = new AnimalFactory();
-var dog = factory.CreateAnimal("dog");
-dog.MakeSound();
-
-// ===================== ABSTRACT FACTORY =====================
-public interface IButton { void Render(); }
-public interface ITextBox { void Render(); }
-
-public class WinButton : IButton
-{
-    public void Render() => Console.WriteLine("Rendering Windows button");
-}
-
-public class MacButton : IButton
-{
-    public void Render() => Console.WriteLine("Rendering Mac button");
-}
-
-public class WinTextBox : ITextBox
-{
-    public void Render() => Console.WriteLine("Rendering Windows textbox");
-}
-
-public class MacTextBox : ITextBox
-{
-    public void Render() => Console.WriteLine("Rendering Mac textbox");
-}
-
-public interface IGuiFactory
-{
-    IButton CreateButton();
-    ITextBox CreateTextBox();
-}
-
-public class WinFactory : IGuiFactory
-{
-    public IButton CreateButton() => new WinButton();
-    public ITextBox CreateTextBox() => new WinTextBox();
-}
-
-public class MacFactory : IGuiFactory
-{
-    public IButton CreateButton() => new MacButton();
-    public ITextBox CreateTextBox() => new MacTextBox();
-}
-
-// Usage
-IGuiFactory factory = new WinFactory();
-var button = factory.CreateButton();
-button.Render();
-
-// ===================== STRATEGY =====================
-public interface ISortStrategy
-{
-    void Sort(List<int> data);
-}
-
-public class QuickSort : ISortStrategy
-{
-    public void Sort(List<int> data)
-    {
-        Console.WriteLine("Quick sorting...");
-        // Implementation here
-    }
-}
-
-public class BubbleSort : ISortStrategy
-{
-    public void Sort(List<int> data)
-    {
-        Console.WriteLine("Bubble sorting...");
-        // Implementation here
-    }
-}
-
-public class Sorter
-{
-    private ISortStrategy _strategy;
-    
-    public void SetStrategy(ISortStrategy strategy)
-    {
-        _strategy = strategy;
-    }
-    
-    public void Sort(List<int> data)
-    {
-        _strategy.Sort(data);
-    }
-}
-
-// Usage
-var sorter = new Sorter();
-sorter.SetStrategy(new QuickSort());
-sorter.Sort(new List<int> { 1, 5, 3, 2, 4 });
-
-// ===================== OBSERVER =====================
-public interface IObserver
-{
-    void Update(string message);
-}
-
-public class WeatherStation
-{
-    private readonly List<IObserver> _observers = new();
-    private string _weatherUpdate;
-
-    public void Attach(IObserver observer) => _observers.Add(observer);
-    public void Detach(IObserver observer) => _observers.Remove(observer);
-    
-    public void SetWeather(string weather)
-    {
-        _weatherUpdate = weather;
-        Notify();
-    }
-    
-    private void Notify()
-    {
-        foreach (var observer in _observers)
+        get
         {
-            observer.Update(_weatherUpdate);
+            lock (padlock)
+            {
+                if (instance == null)
+                {
+                    instance = new Singleton();
+                }
+                return instance;
+            }
         }
     }
 }
 
-public class WeatherDisplay : IObserver
+// ===================== FACTORY METHOD =====================
+public abstract class Creator
 {
-    public void Update(string message)
+    public abstract IProduct FactoryMethod();
+    
+    public string SomeOperation()
     {
-        Console.WriteLine($"Weather Display: {message}");
+        var product = FactoryMethod();
+        return "Creator: " + product.Operation();
     }
 }
 
-// Usage
-var weatherStation = new WeatherStation();
-var display = new WeatherDisplay();
-weatherStation.Attach(display);
-weatherStation.SetWeather("Sunny");
+public class ConcreteCreatorA : Creator
+{
+    public override IProduct FactoryMethod()
+    {
+        return new ConcreteProductA();
+    }
+}
+
+public class ConcreteCreatorB : Creator
+{
+    public override IProduct FactoryMethod()
+    {
+        return new ConcreteProductB();
+    }
+}
+
+public interface IProduct
+{
+    string Operation();
+}
+
+public class ConcreteProductA : IProduct
+{
+    public string Operation()
+    {
+        return "Result of ConcreteProductA";
+    }
+}
+
+public class ConcreteProductB : IProduct
+{
+    public string Operation()
+    {
+        return "Result of ConcreteProductB";
+    }
+}
+
+// ===================== ABSTRACT FACTORY =====================
+public interface IAbstractFactory
+{
+    IAbstractProductA CreateProductA();
+    IAbstractProductB CreateProductB();
+}
+
+public interface IAbstractProductA
+{
+    string UsefulFunctionA();
+}
+
+public interface IAbstractProductB
+{
+    string UsefulFunctionB();
+    string AnotherUsefulFunctionB(IAbstractProductA collaborator);
+}
+
+public class ConcreteFactory1 : IAbstractFactory
+{
+    public IAbstractProductA CreateProductA()
+    {
+        return new ConcreteProductA1();
+    }
+
+    public IAbstractProductB CreateProductB()
+    {
+        return new ConcreteProductB1();
+    }
+}
+
+public class ConcreteFactory2 : IAbstractFactory
+{
+    public IAbstractProductA CreateProductA()
+    {
+        return new ConcreteProductA2();
+    }
+
+    public IAbstractProductB CreateProductB()
+    {
+        return new ConcreteProductB2();
+    }
+}
+
+public class ConcreteProductA1 : IAbstractProductA
+{
+    public string UsefulFunctionA()
+    {
+        return "Product A1";
+    }
+}
+
+public class ConcreteProductA2 : IAbstractProductA
+{
+    public string UsefulFunctionA()
+    {
+        return "Product A2";
+    }
+}
+
+// ===================== STRATEGY =====================
+public interface IStrategy
+{
+    void Algorithm();
+}
+
+public class ConcreteStrategyA : IStrategy
+{
+    public void Algorithm()
+    {
+        Console.WriteLine("ConcreteStrategyA algorithm");
+    }
+}
+
+public class ConcreteStrategyB : IStrategy
+{
+    public void Algorithm()
+    {
+        Console.WriteLine("ConcreteStrategyB algorithm");
+    }
+}
+
+public class Context
+{
+    private IStrategy _strategy;
+
+    public Context(IStrategy strategy)
+    {
+        _strategy = strategy;
+    }
+
+    public void SetStrategy(IStrategy strategy)
+    {
+        _strategy = strategy;
+    }
+
+    public void DoSomeBusinessLogic()
+    {
+        _strategy.Algorithm();
+    }
+}
+
+// ===================== OBSERVER =====================
+public interface IObserver
+{
+    void Update(ISubject subject);
+}
+
+public interface ISubject
+{
+    void Attach(IObserver observer);
+    void Detach(IObserver observer);
+    void Notify();
+}
+
+public class Subject : ISubject
+{
+    private List<IObserver> _observers = new List<IObserver>();
+    public int State { get; set; }
+
+    public void Attach(IObserver observer)
+    {
+        _observers.Add(observer);
+    }
+
+    public void Detach(IObserver observer)
+    {
+        _observers.Remove(observer);
+    }
+
+    public void Notify()
+    {
+        foreach (var observer in _observers)
+        {
+            observer.Update(this);
+        }
+    }
+}
+
+public class ConcreteObserverA : IObserver
+{
+    public void Update(ISubject subject)
+    {
+        if (subject is Subject concreteSubject)
+        {
+            Console.WriteLine($"ConcreteObserverA reacted to state {concreteSubject.State}");
+        }
+    }
+}
 
 // ===================== BUILDER =====================
-public class Computer
+public interface IBuilder
 {
-    public string CPU { get; set; }
-    public string RAM { get; set; }
-    public string Storage { get; set; }
+    void BuildPartA();
+    void BuildPartB();
+    void BuildPartC();
 }
 
-public class ComputerBuilder
+public class ConcreteBuilder : IBuilder
 {
-    private readonly Computer _computer = new();
-    
-    public ComputerBuilder AddCPU(string cpu)
+    private Product _product = new Product();
+
+    public ConcreteBuilder()
     {
-        _computer.CPU = cpu;
-        return this;
+        Reset();
     }
-    
-    public ComputerBuilder AddRAM(string ram)
+
+    public void Reset()
     {
-        _computer.RAM = ram;
-        return this;
+        _product = new Product();
     }
-    
-    public ComputerBuilder AddStorage(string storage)
+
+    public void BuildPartA()
     {
-        _computer.Storage = storage;
-        return this;
+        _product.Add("PartA");
     }
-    
-    public Computer Build() => _computer;
+
+    public void BuildPartB()
+    {
+        _product.Add("PartB");
+    }
+
+    public void BuildPartC()
+    {
+        _product.Add("PartC");
+    }
+
+    public Product GetProduct()
+    {
+        Product result = _product;
+        Reset();
+        return result;
+    }
 }
 
-// Usage
-var computer = new ComputerBuilder()
-    .AddCPU("Intel i7")
-    .AddRAM("16GB")
-    .AddStorage("512GB SSD")
-    .Build();
+public class Product
+{
+    private List<string> _parts = new List<string>();
+
+    public void Add(string part)
+    {
+        _parts.Add(part);
+    }
+}
+
+public class Director
+{
+    private IBuilder _builder;
+
+    public Director(IBuilder builder)
+    {
+        _builder = builder;
+    }
+
+    public void BuildMinimalProduct()
+    {
+        _builder.BuildPartA();
+    }
+
+    public void BuildFullProduct()
+    {
+        _builder.BuildPartA();
+        _builder.BuildPartB();
+        _builder.BuildPartC();
+    }
+}
 
 // ===================== PROTOTYPE =====================
-public abstract class ShapePrototype
+public abstract class Prototype
 {
-    public int X { get; set; }
-    public int Y { get; set; }
-    public string Color { get; set; }
-    
-    public abstract ShapePrototype Clone();
+    public int Id { get; set; }
+
+    public Prototype(int id)
+    {
+        Id = id;
+    }
+
+    public abstract Prototype Clone();
 }
 
-public class Rectangle : ShapePrototype
+public class ConcretePrototype1 : Prototype
 {
-    public int Width { get; set; }
-    public int Height { get; set; }
-    
-    public override ShapePrototype Clone()
+    public ConcretePrototype1(int id) : base(id) { }
+
+    public override Prototype Clone()
     {
-        return new Rectangle
-        {
-            X = X,
-            Y = Y,
-            Color = Color,
-            Width = Width,
-            Height = Height
-        };
+        return new ConcretePrototype1(Id);
     }
 }
 
-// Usage
-var rect = new Rectangle { X = 10, Y = 20, Width = 100, Height = 200, Color = "Red" };
-var clonedRect = rect.Clone() as Rectangle;
+public class ConcretePrototype2 : Prototype
+{
+    public ConcretePrototype2(int id) : base(id) { }
+
+    public override Prototype Clone()
+    {
+        return new ConcretePrototype2(Id);
+    }
+}
 
 // ===================== DECORATOR =====================
-public interface ICoffee
+public abstract class Component
 {
-    string GetDescription();
-    double GetCost();
+    public abstract string Operation();
 }
 
-public class SimpleCoffee : ICoffee
+public class ConcreteComponent : Component
 {
-    public string GetDescription() => "Simple Coffee";
-    public double GetCost() => 1.0;
+    public override string Operation()
+    {
+        return "ConcreteComponent";
+    }
 }
 
-public abstract class CoffeeDecorator : ICoffee
+public abstract class Decorator : Component
 {
-    protected readonly ICoffee _coffee;
-    protected CoffeeDecorator(ICoffee coffee) => _coffee = coffee;
-    public virtual string GetDescription() => _coffee.GetDescription();
-    public virtual double GetCost() => _coffee.GetCost();
+    protected Component _component;
+
+    public Decorator(Component component)
+    {
+        _component = component;
+    }
+
+    public override string Operation()
+    {
+        return _component.Operation();
+    }
 }
 
-public class MilkDecorator : CoffeeDecorator
+public class ConcreteDecoratorA : Decorator
 {
-    public MilkDecorator(ICoffee coffee) : base(coffee) { }
-    public override string GetDescription() => $"{_coffee.GetDescription()}, with Milk";
-    public override double GetCost() => _coffee.GetCost() + 0.5;
+    public ConcreteDecoratorA(Component component) : base(component) { }
+
+    public override string Operation()
+    {
+        return $"ConcreteDecoratorA({base.Operation()})";
+    }
 }
 
-// Usage
-ICoffee coffee = new SimpleCoffee();
-coffee = new MilkDecorator(coffee);
-Console.WriteLine($"{coffee.GetDescription()} costs ${coffee.GetCost()}");
+public class ConcreteDecoratorB : Decorator
+{
+    public ConcreteDecoratorB(Component component) : base(component) { }
+
+    public override string Operation()
+    {
+        return $"ConcreteDecoratorB({base.Operation()})";
+    }
+}
 
 // ===================== COMMAND =====================
 public interface ICommand
@@ -287,131 +386,491 @@ public interface ICommand
     void Execute();
 }
 
-public class Light
+public class SimpleCommand : ICommand
 {
-    public void TurnOn() => Console.WriteLine("Light is on");
-    public void TurnOff() => Console.WriteLine("Light is off");
+    private string _payload;
+
+    public SimpleCommand(string payload)
+    {
+        _payload = payload;
+    }
+
+    public void Execute()
+    {
+        Console.WriteLine($"SimpleCommand: {_payload}");
+    }
 }
 
-public class LightOnCommand : ICommand
+public class ComplexCommand : ICommand
 {
-    private readonly Light _light;
-    public LightOnCommand(Light light) => _light = light;
-    public void Execute() => _light.TurnOn();
+    private Receiver _receiver;
+    private string _a;
+    private string _b;
+
+    public ComplexCommand(Receiver receiver, string a, string b)
+    {
+        _receiver = receiver;
+        _a = a;
+        _b = b;
+    }
+
+    public void Execute()
+    {
+        _receiver.DoSomething(_a);
+        _receiver.DoSomethingElse(_b);
+    }
 }
 
-public class RemoteControl
+public class Receiver
 {
-    private ICommand _command;
-    public void SetCommand(ICommand command) => _command = command;
-    public void PressButton() => _command.Execute();
+    public void DoSomething(string a)
+    {
+        Console.WriteLine($"Receiver: Working on ({a}.)");
+    }
+
+    public void DoSomethingElse(string b)
+    {
+        Console.WriteLine($"Receiver: Also working on ({b}.)");
+    }
 }
 
-// Usage
-var light = new Light();
-var lightOn = new LightOnCommand(light);
-var remote = new RemoteControl();
-remote.SetCommand(lightOn);
-remote.PressButton();
+public class Invoker
+{
+    private ICommand _onStart;
+    private ICommand _onFinish;
+
+    public void SetOnStart(ICommand command)
+    {
+        _onStart = command;
+    }
+
+    public void SetOnFinish(ICommand command)
+    {
+        _onFinish = command;
+    }
+
+    public void DoSomethingImportant()
+    {
+        _onStart?.Execute();
+        _onFinish?.Execute();
+    }
+}
 
 // ===================== ADAPTER =====================
 public interface ITarget
 {
-    void Request();
+    string GetRequest();
 }
 
 public class Adaptee
 {
-    public void SpecificRequest()
+    public string GetSpecificRequest()
     {
-        Console.WriteLine("Specific request");
+        return "Specific request.";
     }
 }
 
 public class Adapter : ITarget
 {
     private readonly Adaptee _adaptee;
-    public Adapter(Adaptee adaptee) => _adaptee = adaptee;
-    public void Request() => _adaptee.SpecificRequest();
-}
 
-// Usage
-ITarget target = new Adapter(new Adaptee());
-target.Request();
+    public Adapter(Adaptee adaptee)
+    {
+        _adaptee = adaptee;
+    }
+
+    public string GetRequest()
+    {
+        return $"Adapter: {_adaptee.GetSpecificRequest()}";
+    }
+}
 
 // ===================== FACADE =====================
-public class SubSystemOne
+public class Subsystem1
 {
-    public void MethodOne() => Console.WriteLine("SubSystemOne Method");
+    public string Operation1()
+    {
+        return "Subsystem1: Ready!\n";
+    }
+
+    public string OperationN()
+    {
+        return "Subsystem1: Go!\n";
+    }
 }
 
-public class SubSystemTwo
+public class Subsystem2
 {
-    public void MethodTwo() => Console.WriteLine("SubSystemTwo Method");
+    public string Operation1()
+    {
+        return "Subsystem2: Get ready!\n";
+    }
+
+    public string OperationZ()
+    {
+        return "Subsystem2: Fire!\n";
+    }
 }
 
 public class Facade
 {
-    private readonly SubSystemOne _one;
-    private readonly SubSystemTwo _two;
-    
-    public Facade()
+    protected Subsystem1 _subsystem1;
+    protected Subsystem2 _subsystem2;
+
+    public Facade(Subsystem1 subsystem1, Subsystem2 subsystem2)
     {
-        _one = new SubSystemOne();
-        _two = new SubSystemTwo();
+        _subsystem1 = subsystem1;
+        _subsystem2 = subsystem2;
     }
-    
-    public void OperationWrapper()
+
+    public string Operation()
     {
-        _one.MethodOne();
-        _two.MethodTwo();
+        string result = "Facade initializes subsystems:\n";
+        result += _subsystem1.Operation1();
+        result += _subsystem2.Operation1();
+        result += "Facade orders subsystems to perform the action:\n";
+        result += _subsystem1.OperationN();
+        result += _subsystem2.OperationZ();
+        return result;
     }
 }
-
-// Usage
-var facade = new Facade();
-facade.OperationWrapper();
 
 // ===================== BRIDGE =====================
-public interface IDrawAPI
+public interface IImplementation
 {
-    void DrawCircle(int radius, int x, int y);
+    string OperationImplementation();
 }
 
-public class RedCircle : IDrawAPI
+public class ConcreteImplementationA : IImplementation
 {
-    public void DrawCircle(int radius, int x, int y)
+    public string OperationImplementation()
     {
-        Console.WriteLine($"Drawing red circle of radius {radius}");
+        return "ConcreteImplementationA: Result";
     }
 }
 
-public abstract class Shape
+public class ConcreteImplementationB : IImplementation
 {
-    protected IDrawAPI _drawAPI;
-    protected Shape(IDrawAPI drawAPI) => _drawAPI = drawAPI;
-    public abstract void Draw();
-}
-
-public class Circle : Shape
-{
-    private int _radius;
-    private int _x;
-    private int _y;
-    
-    public Circle(int radius, int x, int y, IDrawAPI drawAPI) : base(drawAPI)
+    public string OperationImplementation()
     {
-        _radius = radius;
-        _x = x;
-        _y = y;
-    }
-    
-    public override void Draw()
-    {
-        _drawAPI.DrawCircle(_radius, _x, _y);
+        return "ConcreteImplementationB: Result";
     }
 }
 
+public class Abstraction
+{
+    protected IImplementation _implementation;
+
+    public Abstraction(IImplementation implementation)
+    {
+        _implementation = implementation;
+    }
+
+    public virtual string Operation()
+    {
+        return "Abstract: Base operation with:\n" + 
+            _implementation.OperationImplementation();
+    }
+}
+
+public class ExtendedAbstraction : Abstraction
+{
+    public ExtendedAbstraction(IImplementation implementation) : base(implementation) { }
+
+    public override string Operation()
+    {
+        return "ExtendedAbstraction: Extended operation with:\n" +
+            _implementation.OperationImplementation();
+    }
+}
+
+
+
+
+////////////////////////////
+////////////////////////////
+////////////////////////////
+////////////////////////////
+////////////////////////////
+////////////////////////////
+////////////////////////////
+
+
+// USAGES:
+
+
+
+// ===================== SINGLETON =====================
 // Usage
-var redCircle = new Circle(100, 100, 100, new RedCircle());
-redCircle.Draw();
+public class SingletonDemo
+{
+    public static void Demo()
+    {
+        Singleton s1 = Singleton.Instance;
+        Singleton s2 = Singleton.Instance;
+        
+        Console.WriteLine($"Are instances the same? {s1 == s2}");
+    }
+}
+// Output:
+// Are instances the same? True
+
+// ===================== FACTORY METHOD =====================
+// Usage
+public class FactoryMethodDemo
+{
+    public static void Demo()
+    {
+        Console.WriteLine("App: Launched with ConcreteCreatorA.");
+        Creator creator = new ConcreteCreatorA();
+        Console.WriteLine(creator.SomeOperation());
+
+        Console.WriteLine("\nApp: Launched with ConcreteCreatorB.");
+        creator = new ConcreteCreatorB();
+        Console.WriteLine(creator.SomeOperation());
+    }
+}
+// Output:
+// App: Launched with ConcreteCreatorA.
+// Creator: Result of ConcreteProductA
+// 
+// App: Launched with ConcreteCreatorB.
+// Creator: Result of ConcreteProductB
+
+// ===================== ABSTRACT FACTORY =====================
+// Usage
+public class AbstractFactoryDemo
+{
+    public static void Demo()
+    {
+        Console.WriteLine("Client: Testing client code with ConcreteFactory1");
+        IAbstractFactory factory1 = new ConcreteFactory1();
+        var productA1 = factory1.CreateProductA();
+        var productB1 = factory1.CreateProductB();
+        Console.WriteLine(productA1.UsefulFunctionA());
+        
+        Console.WriteLine("\nClient: Testing the same client code with ConcreteFactory2");
+        IAbstractFactory factory2 = new ConcreteFactory2();
+        var productA2 = factory2.CreateProductA();
+        var productB2 = factory2.CreateProductB();
+        Console.WriteLine(productA2.UsefulFunctionA());
+    }
+}
+// Output:
+// Client: Testing client code with ConcreteFactory1
+// Product A1
+//
+// Client: Testing the same client code with ConcreteFactory2
+// Product A2
+
+// ===================== STRATEGY =====================
+// Usage
+public class StrategyDemo
+{
+    public static void Demo()
+    {
+        var context = new Context(new ConcreteStrategyA());
+        Console.WriteLine("Client: Strategy is set to ConcreteStrategyA");
+        context.DoSomeBusinessLogic();
+
+        Console.WriteLine("\nClient: Strategy is set to ConcreteStrategyB");
+        context.SetStrategy(new ConcreteStrategyB());
+        context.DoSomeBusinessLogic();
+    }
+}
+// Output:
+// Client: Strategy is set to ConcreteStrategyA
+// ConcreteStrategyA algorithm
+//
+// Client: Strategy is set to ConcreteStrategyB
+// ConcreteStrategyB algorithm
+
+// ===================== OBSERVER =====================
+// Usage
+public class ObserverDemo
+{
+    public static void Demo()
+    {
+        var subject = new Subject();
+        var observerA = new ConcreteObserverA();
+        subject.Attach(observerA);
+
+        Console.WriteLine("Client: Changing subject state to 1");
+        subject.State = 1;
+        subject.Notify();
+
+        Console.WriteLine("\nClient: Changing subject state to 2");
+        subject.State = 2;
+        subject.Notify();
+    }
+}
+// Output:
+// Client: Changing subject state to 1
+// ConcreteObserverA reacted to state 1
+//
+// Client: Changing subject state to 2
+// ConcreteObserverA reacted to state 2
+
+// ===================== BUILDER =====================
+// Usage
+public class BuilderDemo
+{
+    public static void Demo()
+    {
+        var builder = new ConcreteBuilder();
+        var director = new Director(builder);
+
+        Console.WriteLine("Client: Building minimal product");
+        director.BuildMinimalProduct();
+        var product1 = builder.GetProduct();
+
+        Console.WriteLine("\nClient: Building full product");
+        director.BuildFullProduct();
+        var product2 = builder.GetProduct();
+    }
+}
+// Output:
+// Client: Building minimal product
+// Client: Building full product
+
+// ===================== PROTOTYPE =====================
+// Usage
+public class PrototypeDemo
+{
+    public static void Demo()
+    {
+        var p1 = new ConcretePrototype1(1);
+        var c1 = p1.Clone();
+        
+        Console.WriteLine($"Original object id: {p1.Id}");
+        Console.WriteLine($"Cloned object id: {c1.Id}");
+    }
+}
+// Output:
+// Original object id: 1
+// Cloned object id: 1
+
+// ===================== DECORATOR =====================
+// Usage
+public class DecoratorDemo
+{
+    public static void Demo()
+    {
+        var simple = new ConcreteComponent();
+        var decorator1 = new ConcreteDecoratorA(simple);
+        var decorator2 = new ConcreteDecoratorB(decorator1);
+
+        Console.WriteLine("Client: Simple component:");
+        Console.WriteLine(simple.Operation());
+
+        Console.WriteLine("\nClient: Decorated component:");
+        Console.WriteLine(decorator2.Operation());
+    }
+}
+// Output:
+// Client: Simple component:
+// ConcreteComponent
+//
+// Client: Decorated component:
+// ConcreteDecoratorB(ConcreteDecoratorA(ConcreteComponent))
+
+// ===================== COMMAND =====================
+// Usage
+public class CommandDemo
+{
+    public static void Demo()
+    {
+        var invoker = new Invoker();
+        invoker.SetOnStart(new SimpleCommand("Say Hi!"));
+        
+        var receiver = new Receiver();
+        invoker.SetOnFinish(new ComplexCommand(receiver, "Send email", "Save report"));
+
+        Console.WriteLine("Client: Running command pattern");
+        invoker.DoSomethingImportant();
+    }
+}
+// Output:
+// Client: Running command pattern
+// SimpleCommand: Say Hi!
+// Receiver: Working on (Send email)
+// Receiver: Also working on (Save report)
+
+// ===================== ADAPTER =====================
+// Usage
+public class AdapterDemo
+{
+    public static void Demo()
+    {
+        var adaptee = new Adaptee();
+        ITarget target = new Adapter(adaptee);
+
+        Console.WriteLine("Adaptee interface is incompatible with the client.");
+        Console.WriteLine("But with adapter client can call its method:");
+        Console.WriteLine(target.GetRequest());
+    }
+}
+// Output:
+// Adaptee interface is incompatible with the client.
+// But with adapter client can call its method:
+// Adapter: Specific request.
+
+// ===================== FACADE =====================
+// Usage
+public class FacadeDemo
+{
+    public static void Demo()
+    {
+        var subsystem1 = new Subsystem1();
+        var subsystem2 = new Subsystem2();
+        var facade = new Facade(subsystem1, subsystem2);
+        
+        Console.WriteLine("Client: Using facade");
+        Console.WriteLine(facade.Operation());
+    }
+}
+// Output:
+// Client: Using facade
+// Facade initializes subsystems:
+// Subsystem1: Ready!
+// Subsystem2: Get ready!
+// Facade orders subsystems to perform the action:
+// Subsystem1: Go!
+// Subsystem2: Fire!
+
+// ===================== BRIDGE =====================
+// Usage
+public class BridgeDemo
+{
+    public static void Demo()
+    {
+        var implementation = new ConcreteImplementationA();
+        var abstraction = new Abstraction(implementation);
+        Console.WriteLine(abstraction.Operation());
+
+        implementation = new ConcreteImplementationB();
+        abstraction = new ExtendedAbstraction(implementation);
+        Console.WriteLine("\n" + abstraction.Operation());
+    }
+}
+// Output:
+// Abstract: Base operation with:
+// ConcreteImplementationA: Result
+//
+// ExtendedAbstraction: Extended operation with:
+// ConcreteImplementationB: Result
+
+// Main Program to run all demos
+public class Program
+{
+    public static void Main()
+    {
+        Console.WriteLine("=== Singleton Pattern ===");
+        SingletonDemo.Demo();
+        Console.WriteLine("\n=== Factory Method Pattern ===");
+        FactoryMethodDemo.Demo();
+        Console.WriteLine("\n=== Abstract Factory Pattern ===");
+        AbstractFactoryDemo.Demo();
+        // ... continue with other patterns
+    }
+}
