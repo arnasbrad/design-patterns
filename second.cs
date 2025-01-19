@@ -658,14 +658,14 @@ public class CompositeDemo
         Console.WriteLine("Composite Pattern Demo:");
         
         // Create root and branches
-        Composite root = new Composite("Root");
-        Composite branch1 = new Composite("Branch 1");
-        Composite branch2 = new Composite("Branch 2");
+        Component root = new Composite("Root");
+        Component branch1 = new Composite("Branch 1");
+        Component branch2 = new Composite("Branch 2");
         
         // Create leaves
-        Leaf leaf1 = new Leaf("Leaf 1");
-        Leaf leaf2 = new Leaf("Leaf 2");
-        Leaf leaf3 = new Leaf("Leaf 3");
+        Component leaf1 = new Leaf("Leaf 1");
+        Component leaf2 = new Leaf("Leaf 2");
+        Component leaf3 = new Leaf("Leaf 3");
         
         // Build the tree structure
         root.Add(branch1);
