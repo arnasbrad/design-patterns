@@ -495,6 +495,11 @@ public class Memento
     {
         return _state;
     }
+
+    public void SetState(string state)
+    {
+        _state = state;
+    }
 }
 
 public class Originator
@@ -507,47 +512,31 @@ public class Originator
         _state = state;
     }
 
-    public Memento SaveState()
+    public Memento CreateMemento()
     {
-        Console.WriteLine("Originator: Saving to Memento.");
+        Console.WriteLine("Originator: Creating Memento with current state.");
         return new Memento(_state);
     }
 
-    public void RestoreState(Memento memento)
+    public void SetMemento(Memento memento)
     {
         _state = memento.GetState();
-        Console.WriteLine($"Originator: State after restoring: {_state}");
+        Console.WriteLine($"Originator: State restored to {_state}");
     }
 }
 
 public class Caretaker
 {
     private List<Memento> _mementos = new List<Memento>();
-    private Originator _originator;
 
-    public Caretaker(Originator originator)
+    public void AddMemento(Memento m)
     {
-        _originator = originator;
+        _mementos.Add(m);
     }
 
-    public void Backup()
+    public Memento GetMemento(int index)
     {
-        Console.WriteLine("Caretaker: Saving Originator's state...");
-        _mementos.Add(_originator.SaveState());
-    }
-
-    public void Undo()
-    {
-        if (_mementos.Count == 0)
-        {
-            return;
-        }
-
-        var memento = _mementos.Last();
-        _mementos.Remove(memento);
-
-        Console.WriteLine("Caretaker: Restoring state...");
-        _originator.RestoreState(memento);
+        return _mementos[index];
     }
 }
 
@@ -863,34 +852,40 @@ public class MementoDemo
     public static void Demo()
     {
         Console.WriteLine("Memento Pattern Demo:");
-        
+
         Originator originator = new Originator();
-        Caretaker caretaker = new Caretaker(originator);
-        
+        Caretaker caretaker = new Caretaker();
+
+        // Set initial state
         originator.SetState("State #1");
-        caretaker.Backup();
-        
+        // Save state
+        caretaker.AddMemento(originator.CreateMemento());
+
+        // Change state
         originator.SetState("State #2");
-        caretaker.Backup();
-        
+        // Save state again
+        caretaker.AddMemento(originator.CreateMemento());
+
+        // Change state again
         originator.SetState("State #3");
-        Console.WriteLine("\nNow restoring to previous state...");
-        caretaker.Undo();
+
+        // Restore to first saved state
+        Console.WriteLine("\nRestoring to first saved state...");
+        originator.SetMemento(caretaker.GetMemento(0));
     }
 }
-// Output:
-// Memento Pattern Demo:
-// Originator: Setting state to State #1
-// Caretaker: Saving Originator's state...
-// Originator: Saving to Memento.
-// Originator: Setting state to State #2
-// Caretaker: Saving Originator's state...
-// Originator: Saving to Memento.
-// Originator: Setting state to State #3
-// 
-// Now restoring to previous state...
-// Caretaker: Restoring state...
-// Originator: State after restoring: State #2
+
+/* Output:
+Memento Pattern Demo:
+Originator: Setting state to State #1
+Originator: Creating Memento with current state.
+Originator: Setting state to State #2
+Originator: Creating Memento with current state.
+Originator: Setting state to State #3
+
+Restoring to first saved state...
+Originator: State restored to State #1
+*/
 
 // ===================== VISITOR =====================
 public class VisitorDemo
