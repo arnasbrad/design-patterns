@@ -367,6 +367,7 @@ public interface IExpression
     int Interpret(Dictionary<string, int> context);
 }
 
+// Terminal Expression - handles number literals
 public class NumberExpression : IExpression
 {
     private int _number;
@@ -382,6 +383,7 @@ public class NumberExpression : IExpression
     }
 }
 
+// NonTerminal Expression - handles operations
 public class AddExpression : IExpression
 {
     private IExpression _left;
