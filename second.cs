@@ -1,7 +1,7 @@
 // ===================== TEMPLATE METHOD =====================
 public abstract class AbstractClass
 {
-    public void TemplateMethod()
+    public sealed void TemplateMethod()
     {
         BaseOperation1();
         RequiredOperation1();
